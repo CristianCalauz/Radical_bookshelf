@@ -1,0 +1,30 @@
+.layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  
+  .main-content {
+    display: flex;
+    flex-grow: 1;
+  }
+  
+  .page-content {
+    flex-grow: 1;
+    background-color: #e9edf6;
+    padding: 20px;
+  }
+
+body {
+  font-family: 'Lato', sans-serif;
+}
+
+.medium {
+  font-weight: 500;
+}
+
+.bold {
+  font-weight: 700;
+}
+
+  
