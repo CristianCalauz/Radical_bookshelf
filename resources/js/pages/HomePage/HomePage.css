@@ -1,0 +1,43 @@
+.homepage {
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.search-container {
+    margin-bottom: 20px;
+}
+
+.category-title {
+    color: #0077cc;
+    float: left;
+    clear: both;
+    margin: 20px 0;
+    margin-left: 14%;
+    cursor: pointer;
+    text-decoration: underline;
+
+}
+
+.book-list {
+    clear: both;
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-left: 14%;
+}
+
+.book-list img {
+    width: calc(25%);
+    height: auto;
+}
+
+.homepage::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.category-title:hover {
+    text-decoration: none;
+}
