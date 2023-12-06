@@ -12,10 +12,10 @@ const FavoritesPage = () => {
     useEffect(() => {
         axios.get('/api/favorites')
             .then(response => {
-                const favoriteBooks = response.data.map(fav => ({
-                    ...fav.book,
+                const favoriteBooks = response.data.map(book => ({
+                    ...book,
                     isFavorited: true,
-                    rating: fav.rating || fav.book.rating
+                    rating: book.averageRating || 0
                 }));
                 setFavorites(favoriteBooks);
                 setFilteredFavorites(favoriteBooks);
@@ -24,6 +24,17 @@ const FavoritesPage = () => {
                 console.error('Error fetching favorites:', error);
             });
     }, []);
+
+    const updateBookRating = (bookId, newRating) => {
+        const updatedFavorites = favorites.map(book => {
+            if (book.id === bookId) {
+                return { ...book, rating: newRating };
+            }
+            return book;
+        });
+        setFavorites(updatedFavorites);
+        setFilteredFavorites(updatedFavorites);
+    };
 
     const handleSearch = (query) => {
         const lowercasedQuery = query.toLowerCase();
@@ -34,8 +45,23 @@ const FavoritesPage = () => {
         setFilteredFavorites(filteredData);
     };
 
+    const handleToggleFavorite = (book) => {
+        axios.post('/api/toggle-favorite', { book_id: book.id })
+        .then(response => {
+            // Update the state to reflect the change
+            const updatedFavorites = favorites.map(b => {
+                if (b.id === book.id) {
+                    return { ...b, isFavorited: !b.isFavorited };
+                }
+                return b;
+            });
+            setFavorites(updatedFavorites);
+            setFilteredFavorites(updatedFavorites);
+        })
+        .catch(error => console.error('Error toggling favorite:', error));
+    };
+    
     const handleEdit = (book) => {
-        console.log('Editing book', book);
         navigate(`/favorites/edit/${book.id}`);
     };
 
@@ -56,12 +82,12 @@ const FavoritesPage = () => {
             <SearchBar onSearch={handleSearch} />
             <UniversalTable 
                 data={filteredFavorites} 
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onFavoriteToggle={(id) => {
-                    console.log('Favorite toggled', id);
-                }}
-                showEditDelete={true}
+                updateBookRating={updateBookRating} 
+                handleToggleFavorite={handleToggleFavorite} 
+                isISBN={false} 
+                onEdit={handleEdit} 
+                onDelete={handleDelete} 
+                showEditDelete={true} 
             />
         </div>
     );

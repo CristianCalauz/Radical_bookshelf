@@ -12,11 +12,20 @@ class FavoriteController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
-
-        $favorites = Favorite::with('book')->get();
+        $userId = Auth::id() ?? 1;
+    
+        $favorites = Favorite::with(['book', 'book.ratings'])
+                        ->where('user_id', $userId)
+                        ->get()
+                        ->map(function ($favorite) {
+                            $book = $favorite->book;
+                            $book->averageRating = $book->ratings->avg('rating');
+                            return $book;
+                        });
+    
         return response()->json($favorites);
     }
+    
     public function store(Request $request, Book $book)
     {
         $favorite = new Favorite();
@@ -28,29 +37,28 @@ class FavoriteController extends Controller
 
     public function destroy($id)
     {
-      $favorite = Favorite::findOrFail($id);
-      $favorite->delete();
+        $favorite = Favorite::findOrFail($id);
+        $favorite->delete();
     
-      return response()->json(['message' => 'Favorite book deleted successfully.']);
+        return response()->json(['message' => 'Favorite book deleted successfully.']);
     }
 
     public function toggleFavorite(Request $request)
     {
         try {
             $userId = Auth::id() ?? 1;
-            $externalId = $request->input('external_id');
-            $source = $request->input('source');
+            $isbn = $request->input('isbn');
             $title = $request->input('title');
             $author = $request->input('author');
-            $coverImage = $request->input('cover_image');
-        
+            $coverImage = $request->input('cover_image') ?? 'default_image_link';
+    
             $book = Book::firstOrCreate(
-                ['external_id' => $externalId, 'source' => $source],
-                ['title' => $title, 'author' => $author, 'cover_image' => $coverImage]
+                ['isbn' => $isbn],
+                ['title' => $title, 'author' => $author, 'cover_image' => $coverImage, 'external_id' => $isbn, 'source' => 'Google Books']
             );
-        
+    
             $favorite = Favorite::where('user_id', $userId)->where('book_id', $book->id)->first();
-        
+    
             if ($favorite) {
                 $favorite->delete();
                 return response()->json(['message' => 'Book removed from favorites']);
@@ -61,9 +69,9 @@ class FavoriteController extends Controller
                 $favorite->save();
                 return response()->json(['message' => 'Book added to favorites']);
             }
-        }  catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error('Error toggling favorite: ' . $e->getMessage());
             return response()->json(['error' => 'Server Error'], 500);
         }
-    }
+    }    
 }

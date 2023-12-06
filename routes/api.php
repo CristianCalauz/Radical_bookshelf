@@ -39,3 +39,7 @@ Route::post('/books/{isbn}/ratings', [RatingController::class, 'store']);
 
 Route::get('/current-user', [UserController::class, 'getCurrentUser']);
 Route::get('/switch-user/{userId}', [UserController::class, 'switchUser']);
+
+Route::post('/rate-book', [RatingController::class, 'storeOrUpdateRating']);
+Route::post('/toggle-favorite', [FavoriteController::class, 'toggleFavorite']);
+

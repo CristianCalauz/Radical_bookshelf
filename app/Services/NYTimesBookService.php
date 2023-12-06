@@ -3,17 +3,21 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use App\Services\BookService;
 
 class NYTimesBookService
 {
     protected $baseUri;
     protected $apiKey;
+    protected $bookService;
 
-    public function __construct()
+    public function __construct(BookService $bookService)
     {
         $this->baseUri = 'https://api.nytimes.com/svc/books/v3/';
         $this->apiKey = env('NYTIMES_API_KEY');
+        $this->bookService = $bookService;
     }
+
     public function getBestSellers()
     {
         try {
@@ -32,11 +36,15 @@ class NYTimesBookService
                 foreach ($bestsellers['results']['books'] as &$book) {
                     $isbn = $book['primary_isbn13'] ?? $book['primary_isbn10'];
                     $googleBooksDetails = $this->getBookDetailsWithISBN($isbn);
-        
-                    // Merge Google Books data
+
                     $book['rating'] = $googleBooksDetails['rating'] ?? 0;
                     $book['price'] = $googleBooksDetails['price'] ?? "No price";
+                    $book['customRating'] = $this->bookService->getAverageRatingByISBN($isbn);
+
+                    $userId = auth()->id() ?? 1;
+                    $book['isFavorited'] = $this->bookService->isBookFavoritedByUser($isbn, $userId);
                 }
+
                 return $bestsellers;
             } else {
                 logger()->error('NYT API Error: ' . $response->body());
@@ -46,7 +54,7 @@ class NYTimesBookService
             logger()->error('NYT API Exception: ' . $e->getMessage());
             return response()->json(['error' => 'Server Error'], 500);
         }
-    }    
+    }
 
     public function getBookDetailsWithISBN($isbn)
     {
@@ -60,16 +68,13 @@ class NYTimesBookService
         if ($googleBooksResponse->successful()) {
             $bookDetails = $googleBooksResponse->json();
     
-            // Default values for rating and price
             $rating = 0;
             $price = "No price";
-    
-            // Check if rating is available
+
             if (isset($bookDetails['items'][0]['volumeInfo']['averageRating'])) {
                 $rating = $bookDetails['items'][0]['volumeInfo']['averageRating'];
             }
-    
-            // Check if price is available
+
             if (isset($bookDetails['items'][0]['saleInfo']['listPrice']['amount'])) {
                 $price = $bookDetails['items'][0]['saleInfo']['listPrice']['amount'] . ' ' . $bookDetails['items'][0]['saleInfo']['listPrice']['currencyCode'];
             }
@@ -83,5 +88,4 @@ class NYTimesBookService
             return null;
         }
     }
-
 }

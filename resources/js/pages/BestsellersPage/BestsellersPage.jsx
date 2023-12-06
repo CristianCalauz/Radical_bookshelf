@@ -7,22 +7,32 @@ import './BestsellersPage.css';
 const BestsellersPage = () => {
     const [books, setBooks] = useState([]);
     const [filteredBooks, setFilteredBooks] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         axios.get('/api/nyt-bestsellers')
             .then(response => {
-                console.log(response.data);
-                setBooks(response.data.results.books);
-                setFilteredBooks(response.data.results.books);
-                setIsLoading(false);
+                const booksWithRatingsAndFavoriteStatus = response.data.results.books.map(book => ({
+                    ...book,
+                    rating: book.customRating || book.rating || 0,
+                }));
+                setBooks(booksWithRatingsAndFavoriteStatus);
+                setFilteredBooks(booksWithRatingsAndFavoriteStatus);
             })
             .catch(error => {
                 console.error('Error:', error);
-                setIsLoading(false);
             });
-    }, []);
+    }, []);    
+
+    const updateBookRating = (isbn, newRating) => {
+        const updatedBooks = books.map(book => {
+            if (book.primary_isbn13 === isbn) {
+                return { ...book, rating: newRating };
+            }
+            return book;
+        });
+        setBooks(updatedBooks);
+        setFilteredBooks(updatedBooks);
+    };
 
     const handleSearch = (query) => {
         const lowercasedQuery = query.toLowerCase();
@@ -33,35 +43,37 @@ const BestsellersPage = () => {
         setFilteredBooks(filteredData);
     };
 
-    const onFavoriteToggle = (bookId) => {
-        const updatedBooks = books.map(book => {
-            if (book.id === bookId) { 
-                return { ...book, isFavorited: !book.isFavorited };
-            }
-            return book;
-        });
-        setBooks(updatedBooks);
-    
-        const updatedFilteredBooks = updatedBooks.filter(book =>
-            book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            book.author.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        setFilteredBooks(updatedFilteredBooks);
+    const handleToggleFavorite = (book) => {
+        axios.post('/api/toggle-favorite', {
+            isbn: book.primary_isbn13,
+            title: book.title,
+            author: book.author
+        })
+        .then(response => {
+            const updatedBooks = books.map(b => {
+                if (b.primary_isbn13 === book.primary_isbn13) {
+                    return { ...b, isFavorited: !b.isFavorited };
+                }
+                return b;
+            });
+            setBooks(updatedBooks);
+            setFilteredBooks(updatedBooks);
+        })
+        .catch(error => console.error('Error toggling favorite:', error));
     };
     
     
-
-    const columns = [
-        { Header: 'Title', accessor: 'title' },
-        { Header: 'Author', accessor: 'author' },
-    ];
-
     return (
         <div className="page-content">
             <h1 className="page-title">New York Times Bestsellers</h1>
             <SearchBar onSearch={handleSearch} />
-            <UniversalTable data={filteredBooks} columns={columns} onFavoriteToggle={onFavoriteToggle} />
-        </div>
+            <UniversalTable 
+                data={filteredBooks} 
+                updateBookRating={updateBookRating} 
+                handleToggleFavorite={handleToggleFavorite} 
+                isISBN={true} 
+            />
+            </div>
     );
 };
 

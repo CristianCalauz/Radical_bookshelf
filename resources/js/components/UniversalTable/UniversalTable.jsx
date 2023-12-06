@@ -2,7 +2,7 @@ import React from 'react';
 import './UniversalTable.css';
 import axios from 'axios';
 
-const UniversalTable = ({ data, onFavoriteToggle, onEdit, onDelete, showEditDelete }) => {
+const UniversalTable = ({ data, updateBookRating, handleToggleFavorite, onEdit, onDelete, showEditDelete, isISBN }) => {
     const renderStars = (rating, book) => {
         let stars = [];
         for (let i = 1; i <= 5; i++) {
@@ -18,23 +18,26 @@ const UniversalTable = ({ data, onFavoriteToggle, onEdit, onDelete, showEditDele
     };
 
     const handleRatingSubmit = (book, rating) => {
-        const requestData = {
+        const requestData = isISBN ? {
+            isbn: book.primary_isbn13,
             rating: rating,
             title: book.title,
             author: book.author
+        } : {
+            book_id: book.id,
+            rating: rating
         };
 
-        axios.post(`/api/books/${book.primary_isbn13}/ratings`, requestData)
+        axios.post(`/api/rate-book`, requestData)
             .then(response => {
-                if(onFavoriteToggle) {
-                    onFavoriteToggle(book.id);
-                }
+                const identifier = isISBN ? book.primary_isbn13 : book.id;
+                updateBookRating(identifier, rating);
             })
             .catch(error => {
                 console.error('Error submitting rating:', error);
             });
     };
-
+    
     const handleFavorite = (book) => {
         axios.post('/api/favorite', {
             external_id: book.primary_isbn13,
@@ -86,9 +89,8 @@ const UniversalTable = ({ data, onFavoriteToggle, onEdit, onDelete, showEditDele
                                 </>
                             )}
                             <td>
-                                <span className="favorite-icon" onClick={() => handleFavorite(book)}>
-                                    <i className={`bi ${book.isFavorited ? 'bi-heart-fill' : 'bi-heart'}`}
-                                       style={{ color: book.isFavorited ? '#757575' : 'lightgrey', cursor: 'pointer' }}>
+                                <span className="favorite-icon" onClick={() => handleToggleFavorite(book)}>
+                                    <i className={`bi ${book.isFavorited ? 'bi-heart-fill' : 'bi-heart'}`}>
                                     </i>
                                 </span>
                             </td>
