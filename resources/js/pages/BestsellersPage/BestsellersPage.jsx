@@ -14,6 +14,7 @@ const BestsellersPage = () => {
                 const booksWithRatingsAndFavoriteStatus = response.data.results.books.map(book => ({
                     ...book,
                     rating: book.customRating || book.rating || 0,
+                    hasCustomRating: !!book.customRating
                 }));
                 setBooks(booksWithRatingsAndFavoriteStatus);
                 setFilteredBooks(booksWithRatingsAndFavoriteStatus);

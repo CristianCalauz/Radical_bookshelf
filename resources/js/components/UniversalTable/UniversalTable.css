@@ -37,7 +37,7 @@
     display: none; 
   }
 
-.favorite-button {
+.favorite-icon {
   background: none;
   border: none;
   cursor: pointer;
@@ -48,7 +48,7 @@
   color: #007bff;
 }
 
-.favorite-button:hover {
+.favorite-icon:hover {
   color: #000;
 }
 
@@ -85,6 +85,7 @@
 
   .book-title {
     color: #5d5c77;
+    font-weight: bold;
 }
 
 .book-author {

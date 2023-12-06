@@ -6,16 +6,18 @@ const UniversalTable = ({ data, updateBookRating, handleToggleFavorite, onEdit, 
     const renderStars = (rating, book) => {
         let stars = [];
         for (let i = 1; i <= 5; i++) {
+            const starClass = `bi ${i <= rating ? 'bi-star-fill' : 'bi-star'}`;
+            const starStyle = {
+                color: i <= rating ? (book.hasCustomRating ? 'orange' : 'gray') : 'lightgray',
+                cursor: 'pointer'
+            };
+    
             stars.push(
-                <i key={i}
-                   className={`bi ${i <= rating ? 'bi-star-fill' : 'bi-star'}`}
-                   style={{ color: i <= rating ? 'gold' : 'gray' }}
-                   onClick={() => handleRatingSubmit(book, i)}
-                ></i>
+                <i key={i} className={starClass} style={starStyle} onClick={() => handleRatingSubmit(book, i)}></i>
             );
         }
         return stars;
-    };
+    };    
 
     const handleRatingSubmit = (book, rating) => {
         const requestData = isISBN ? {
@@ -63,6 +65,7 @@ const UniversalTable = ({ data, updateBookRating, handleToggleFavorite, onEdit, 
                     {data.map((book, index) => (
                         <tr key={index}>
                             <td className="title-author">
+                                <i className="bi bi-book" style={{ marginRight: '5px' }}></i> {/* Bootstrap book icon */}
                                 <span className="book-title">{book.title}</span>
                                 {' by '}
                                 <span className="book-author">{book.author}</span>
@@ -71,6 +74,14 @@ const UniversalTable = ({ data, updateBookRating, handleToggleFavorite, onEdit, 
                                 <div className="star-rating">
                                     {renderStars(book.rating, book)}
                                 </div>
+                            </td>
+                            <td className="price">{book.price}</td>
+                            <td>
+                                <span className="favorite-icon" onClick={() => handleToggleFavorite(book)}>
+                                    <i className={`bi ${book.isFavorited ? 'bi-heart-fill' : 'bi-heart'}`}
+                                       style={{ color: book.isFavorited ? '#93b4bc' : 'lightgrey', cursor: 'pointer' }}>
+                                    </i>
+                                </span>
                             </td>
                             {showEditDelete && (
                                 <>
@@ -88,12 +99,6 @@ const UniversalTable = ({ data, updateBookRating, handleToggleFavorite, onEdit, 
                                     </td>
                                 </>
                             )}
-                            <td>
-                                <span className="favorite-icon" onClick={() => handleToggleFavorite(book)}>
-                                    <i className={`bi ${book.isFavorited ? 'bi-heart-fill' : 'bi-heart'}`}>
-                                    </i>
-                                </span>
-                            </td>
                         </tr>
                     ))}
                 </tbody>

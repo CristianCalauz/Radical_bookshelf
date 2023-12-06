@@ -3,6 +3,7 @@ import axios from 'axios';
 import UniversalTable from '../../components/UniversalTable/UniversalTable';
 import SearchBar from '../../components/SearchBar/SearchBar';
 import { useNavigate } from 'react-router-dom';
+import './FavoritesPage.css'
 
 const FavoritesPage = () => {
     const [favorites, setFavorites] = useState([]);
@@ -15,7 +16,8 @@ const FavoritesPage = () => {
                 const favoriteBooks = response.data.map(book => ({
                     ...book,
                     isFavorited: true,
-                    rating: book.averageRating || 0
+                    rating: book.customRating || book.averageRating || 0,
+                    hasCustomRating: true
                 }));
                 setFavorites(favoriteBooks);
                 setFilteredFavorites(favoriteBooks);
@@ -78,7 +80,7 @@ const FavoritesPage = () => {
 
     return (
         <div>
-            <h1>My Favorites</h1>
+            <h1 className="page-title">My Favorites</h1>
             <SearchBar onSearch={handleSearch} />
             <UniversalTable 
                 data={filteredFavorites} 
